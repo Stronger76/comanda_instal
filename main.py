@@ -17,13 +17,30 @@ st.title("📦 Online rendelési felület")
 if "cart" not in st.session_state:
     st.session_state["cart"] = []
 
-# Autocomplete selectbox – közvetlenül a termékek között keres
-product = st.selectbox(
-    "🔍 Válassz egy terméket:",
-    options=df["név"].unique(),
-    index=None,
-    placeholder="Kezdj el gépelni..."
-)
+# Keresőmező
+search_text = st.text_input("🔍 Keresés (írj be tetszőleges szavakat, sorrend mindegy):")
+
+# Szűrés szórend-függetlenül
+if search_text:
+    words = search_text.lower().split()
+    def match(row):
+        text = " ".join(row.astype(str).str.lower())
+        return all(word in text for word in words)
+    filtered = df[df.apply(match, axis=1)]
+else:
+    filtered = df
+
+# Termékválasztó a találatokból
+if not filtered.empty:
+    product = st.selectbox(
+        "Válassz terméket:",
+        options=filtered["név"].unique(),
+        index=None,
+        placeholder="Kezdj el gépelni..."
+    )
+else:
+    product = None
+    st.warning("Nincs találat.")
 
 # Mennyiség
 qty = st.number_input("Mennyiség:", min_value=1, value=1)
@@ -35,12 +52,11 @@ if st.button("➕ Kosárba") and product:
     st.session_state["cart"].append(selected)
     st.success(f"{product} hozzáadva a kosárhoz!")
 
-# Kosár szerkeszthető táblázatként
+# Kosár szerkeszthető
 if st.session_state["cart"]:
     st.write("### 🛒 Kosár tartalma (szerkeszthető)")
     cart_df = pd.DataFrame(st.session_state["cart"])
 
-    # Csak a "rendelt_mennyiség" oszlop legyen szerkeszthető
     edited_cart = st.data_editor(
         cart_df,
         num_rows="dynamic",
@@ -49,14 +65,12 @@ if st.session_state["cart"]:
         key="cart_editor"
     )
 
-    # Session frissítése a szerkesztett változattal
     st.session_state["cart"] = edited_cart.to_dict(orient="records")
 
-    # Export CSV
+    # Export gombok
     csv = edited_cart.to_csv(index=False).encode("utf-8")
     st.download_button("⬇️ Letöltés CSV", csv, "rendeles.csv", "text/csv")
 
-    # Export Excel
     output = BytesIO()
     with pd.ExcelWriter(output, engine="openpyxl") as writer:
         edited_cart.to_excel(writer, index=False, sheet_name="Rendeles")
