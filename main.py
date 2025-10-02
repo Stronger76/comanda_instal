@@ -3,17 +3,25 @@ import pandas as pd
 from io import BytesIO
 import streamlit_authenticator as stauth
 
-# ---------- FELHASZNÁLÓK BEÁLLÍTÁSA ----------
-names = ["Kiss Péter", "Nagy Anna"]
-usernames = ["peter", "anna"]
-passwords = ["jelszo123", "titok456"]  # ide teheted a saját jelszavaid
+# ---------- FELHASZNÁLÓK ----------
+credentials = {
+    "usernames": {
+        "peter": {
+            "name": "Kiss Péter",
+            "password": "jelszo123"   # lehet hash-elt jelszó is
+        },
+        "anna": {
+            "name": "Nagy Anna",
+            "password": "titok456"
+        }
+    }
+}
 
+# ---------- AUTHENTIKÁCIÓ ----------
 authenticator = stauth.Authenticate(
-    names,
-    usernames,
-    passwords,
-    "cookie_name",
-    "random_key",
+    credentials,
+    cookie_name="rendelesi_app_cookie",
+    key="random_key",
     cookie_expiry_days=1
 )
 
@@ -23,10 +31,10 @@ name, authentication_status, username = authenticator.login("Belépés", "main")
 if authentication_status == False:
     st.error("❌ Hibás felhasználónév vagy jelszó")
 
-if authentication_status == None:
+elif authentication_status == None:
     st.warning("🔑 Kérlek jelentkezz be!")
 
-if authentication_status:
+elif authentication_status:
     st.success(f"Szia, {name}! ✅")
     authenticator.logout("Kijelentkezés", "sidebar")
 
@@ -35,13 +43,18 @@ if authentication_status:
     def load_data():
         url = "https://docs.google.com/spreadsheets/d/16jmXCMm3TFyZThIulyr21TFGVMMQoU1YtRxlUkvkfr4/export?format=csv&gid=0"
         df = pd.read_csv(url)
+
+        # Árat számmá alakítjuk és pénzformátumba tesszük
         df["ár"] = pd.to_numeric(df["ár"], errors="coerce")
         df["ár_fmt"] = df["ár"].apply(lambda x: f"{x:,.2f} RON" if pd.notnull(x) else "")
+
+        # Kijelzéshez név + ár
         df["display"] = df["név"] + " – " + df["ár_fmt"]
         return df
 
     df = load_data()
 
+    # ---------- FELÜLET ----------
     st.title("📦 Online rendelési felület")
     st.write(f"Bejelentkezve: **{name}**")
 
