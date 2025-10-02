@@ -104,7 +104,7 @@ if menu == "🛒 Rendelés leadása":
         st.session_state["cart"] = []
 
     # Keresés szórendfüggetlenül csak név alapján
-    search_text = st.text_input("🔍 Keresés a név mezőben (szórend mindegy):")
+    search_text = st.text_input("🔍 Keresés a név mezőben (előszűrés):")
     if search_text:
         words = search_text.lower().split()
         def match(n):
@@ -171,7 +171,7 @@ if menu == "🛒 Rendelés leadása":
         st.download_button("⬇️ Letöltés Excel (XLSX)", output.getvalue(), "rendeles.xlsx")
 
         # Kosár véglegesítése MySQL-be
-        if st.button("✅ Kosár véglegesítése"):
+        if st.button("✅ Kosár mentése adatbázisba"):
             if not customer_name:
                 st.error("❌ A rendeléshez kötelező megadni a neved!")
             else:
@@ -221,3 +221,4 @@ elif menu == "📊 Admin – Rendelések listája":
             st.info("Még nincsenek rendelések az adatbázisban.")
     elif admin_password:
         st.error("❌ Hibás admin jelszó!")
+
