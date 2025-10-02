@@ -4,29 +4,21 @@ from io import BytesIO
 import streamlit_authenticator as stauth
 
 # ---------- FELHASZNÁLÓK ----------
-credentials = {
-    "usernames": {
-        "peter": {
-            "name": "Kiss Péter",
-            "password": "jelszo123"   # ideiglenes, lehet hash is
-        },
-        "anna": {
-            "name": "Nagy Anna",
-            "password": "titok456"
-        }
-    }
-}
+names = ["Kiss Péter", "Nagy Anna"]
+usernames = ["peter", "anna"]
+passwords = ["jelszo123", "titok456"]
 
-# ---------- AUTHENTIKÁCIÓ ----------
 authenticator = stauth.Authenticate(
-    credentials,
-    cookie_name="rendelesi_app_cookie",
-    key="random_key",
+    names,
+    usernames,
+    passwords,
+    "rendelesi_app_cookie",
+    "random_key",
     cookie_expiry_days=1
 )
 
-# Login panel (új szintaxis)
-name, authentication_status = authenticator.login(location="main")
+# Itt már működik a három visszatérés!
+name, authentication_status, username = authenticator.login("Belépés", "main")
 
 # ---------- LOGIN KEZELÉS ----------
 if authentication_status == False:
@@ -37,7 +29,7 @@ elif authentication_status == None:
 
 elif authentication_status:
     st.success(f"Szia, {name}! ✅")
-    authenticator.logout("Kijelentkezés", location="sidebar")
+    authenticator.logout("Kijelentkezés", "sidebar")
 
     # ---------- ADATOK BETÖLTÉSE ----------
     @st.cache_data
@@ -48,14 +40,11 @@ elif authentication_status:
         # Árat számmá alakítjuk és pénzformátumba tesszük
         df["ár"] = pd.to_numeric(df["ár"], errors="coerce")
         df["ár_fmt"] = df["ár"].apply(lambda x: f"{x:,.2f} RON" if pd.notnull(x) else "")
-
-        # Kijelzéshez név + ár
         df["display"] = df["név"] + " – " + df["ár_fmt"]
         return df
 
     df = load_data()
 
-    # ---------- FELÜLET ----------
     st.title("📦 Online rendelési felület")
     st.write(f"Bejelentkezve: **{name}**")
 
@@ -130,4 +119,3 @@ elif authentication_status:
         with pd.ExcelWriter(output, engine="openpyxl") as writer:
             cart_df.to_excel(writer, index=False, sheet_name="Rendeles")
         st.download_button("⬇️ Letöltés Excel (XLSX)", output.getvalue(), "rendeles.xlsx")
-
