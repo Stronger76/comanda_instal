@@ -6,10 +6,10 @@ import mysql.connector
 # ---------- MYSQL KAPCSOLAT ----------
 def get_connection():
     return mysql.connector.connect(
-        host="sql7.freesqldatabase.com",   # <-- cseréld ki ha más a host
-        user="sql7801054",                 # <-- a te usered
-        password="x3cxPm8WeK",             # <-- a te jelszavad
-        database="sql7801054",             # <-- a te adatbázisod
+        host="sql7.freesqldatabase.com",   # <-- saját host
+        user="sql7801054",                 # <-- saját user
+        password="x3cxPm8WeK",         # <-- saját jelszó
+        database="sql7801054",             # <-- saját adatbázis
         port=3306
     )
 
@@ -61,12 +61,6 @@ def load_products():
     df["display"] = df["név"] + " – " + df["ár_fmt"]
     return df
 
-# Vásárló név bekérése
-customer_name = st.text_input("👤 Add meg a neved:")
-
-if not customer_name:
-    st.warning("Kérlek írd be a neved, hogy leadhasd a rendelést!")
-
 products_df = load_products()
 
 # ---------- OLDALVÁLASZTÓ ----------
@@ -75,6 +69,9 @@ menu = st.sidebar.radio("Válassz menüt:", ["🛒 Rendelés leadása", "📊 Ad
 # ---------- FELHASZNÁLÓI FELÜLET ----------
 if menu == "🛒 Rendelés leadása":
     st.title("📦 Online rendelési felület")
+
+    # Vásárló neve input
+    customer_name = st.text_input("👤 Add meg a neved:")
 
     if "cart" not in st.session_state:
         st.session_state["cart"] = []
@@ -149,12 +146,11 @@ if menu == "🛒 Rendelés leadása":
         # Kosár véglegesítése MySQL-be
         if st.button("✅ Kosár véglegesítése"):
             if not customer_name:
-            st.error("❌ A rendeléshez kötelező megadni a neved!")
-        else:
-            if save_order_to_mysql(st.session_state["cart"], customer_name=customer_name):
-            st.success(f"A rendelés sikeresen elmentve a MySQL adatbázisba {customer_name} néven!")
-            st.session_state["cart"] = []
-
+                st.error("❌ A rendeléshez kötelező megadni a neved!")
+            else:
+                if save_order_to_mysql(st.session_state["cart"], customer_name=customer_name):
+                    st.success(f"A rendelés sikeresen elmentve {customer_name} néven!")
+                    st.session_state["cart"] = []
 
 
 # ---------- ADMIN FELÜLET ----------
@@ -164,7 +160,14 @@ elif menu == "📊 Admin – Rendelések listája":
     orders_df = load_orders()
 
     if not orders_df.empty:
-        st.write(f"Összesen {len(orders_df)} rendelés található az adatbázisban.")
+        # Vásárló szerinti szűrés
+        customers = orders_df["customer"].dropna().unique().tolist()
+        selected_customer = st.selectbox("Szűrés vásárlóra:", ["(Mind)"] + customers)
+
+        if selected_customer != "(Mind)":
+            orders_df = orders_df[orders_df["customer"] == selected_customer]
+
+        st.write(f"Összesen {len(orders_df)} rendelés található a szűrés után.")
         st.dataframe(orders_df, use_container_width=True)
 
         # Export lehetőségek
@@ -177,6 +180,3 @@ elif menu == "📊 Admin – Rendelések listája":
         st.download_button("⬇️ Letöltés Excel (összes rendelés)", output.getvalue(), "orders.xlsx")
     else:
         st.info("Még nincsenek rendelések az adatbázisban.")
-
-
-
