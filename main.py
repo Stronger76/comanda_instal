@@ -61,6 +61,12 @@ def load_products():
     df["display"] = df["név"] + " – " + df["ár_fmt"]
     return df
 
+# Vásárló név bekérése
+customer_name = st.text_input("👤 Add meg a neved:")
+
+if not customer_name:
+    st.warning("Kérlek írd be a neved, hogy leadhasd a rendelést!")
+
 products_df = load_products()
 
 # ---------- OLDALVÁLASZTÓ ----------
@@ -142,9 +148,13 @@ if menu == "🛒 Rendelés leadása":
 
         # Kosár véglegesítése MySQL-be
         if st.button("✅ Kosár véglegesítése"):
-            if save_order_to_mysql(st.session_state["cart"], customer_name="Teszt Felhasználó"):
-                st.success("A rendelés sikeresen elmentve a MySQL adatbázisba!")
-                st.session_state["cart"] = []
+        if not customer_name:
+        st.error("❌ A rendeléshez kötelező megadni a neved!")
+        else:
+        if save_order_to_mysql(st.session_state["cart"], customer_name=customer_name):
+            st.success(f"A rendelés sikeresen elmentve a MySQL adatbázisba {customer_name} néven!")
+            st.session_state["cart"] = []
+
 
 
 # ---------- ADMIN FELÜLET ----------
@@ -167,4 +177,5 @@ elif menu == "📊 Admin – Rendelések listája":
         st.download_button("⬇️ Letöltés Excel (összes rendelés)", output.getvalue(), "orders.xlsx")
     else:
         st.info("Még nincsenek rendelések az adatbázisban.")
+
 
