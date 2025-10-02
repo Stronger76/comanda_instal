@@ -7,9 +7,9 @@ import mysql.connector
 def get_connection():
     return mysql.connector.connect(
         host="sql7.freesqldatabase.com",   # <-- cseréld ki ha más a host
-        user="sql7801045",                 # <-- a te usered
+        user="sql7801054",                 # <-- a te usered
         password="x3cxPm8WeK",             # <-- a te jelszavad
-        database="sql7801045",             # <-- a te adatbázisod
+        database="sql7801054",             # <-- a te adatbázisod
         port=3306
     )
 
@@ -167,3 +167,4 @@ elif menu == "📊 Admin – Rendelések listája":
         st.download_button("⬇️ Letöltés Excel (összes rendelés)", output.getvalue(), "orders.xlsx")
     else:
         st.info("Még nincsenek rendelések az adatbázisban.")
+
