@@ -2,4 +2,6 @@ streamlit
 pandas
 openpyxl
 streamlit-authenticator
+mysql-connector-python
+
 
