@@ -25,7 +25,8 @@ authenticator = stauth.Authenticate(
     cookie_expiry_days=1
 )
 
-name, authentication_status, username = authenticator.login("Belépés", "main")
+# Login panel (helyes hívás: location="main")
+name, authentication_status, username = authenticator.login("Belépés", location="main")
 
 # ---------- LOGIN KEZELÉS ----------
 if authentication_status == False:
@@ -36,7 +37,7 @@ elif authentication_status == None:
 
 elif authentication_status:
     st.success(f"Szia, {name}! ✅")
-    authenticator.logout("Kijelentkezés", "sidebar")
+    authenticator.logout("Kijelentkezés", location="sidebar")
 
     # ---------- ADATOK BETÖLTÉSE ----------
     @st.cache_data
