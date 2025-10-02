@@ -8,7 +8,7 @@ credentials = {
     "usernames": {
         "peter": {
             "name": "Kiss Péter",
-            "password": "jelszo123"   # lehet hash-elt jelszó is
+            "password": "jelszo123"   # ideiglenes, lehet hash is
         },
         "anna": {
             "name": "Nagy Anna",
@@ -25,8 +25,8 @@ authenticator = stauth.Authenticate(
     cookie_expiry_days=1
 )
 
-# Login panel (helyes hívás: location="main")
-name, authentication_status, username = authenticator.login("Belépés", location="main")
+# Login panel (új szintaxis)
+name, authentication_status, username = authenticator.login(location="main")
 
 # ---------- LOGIN KEZELÉS ----------
 if authentication_status == False:
