@@ -10,7 +10,7 @@ def save_order_to_mysql(cart, customer_name="Ismeretlen"):
             host="sql7.freesqldatabase.com",
             user="sql7801054",
             password="x3cxPm8WeK",
-            database="sql7801054"
+            database="sql7801054",
             port=3306
         )
         cursor = conn.cursor()
@@ -134,4 +134,5 @@ if st.session_state["cart"]:
         if save_order_to_mysql(st.session_state["cart"], customer_name="Teszt Felhasználó"):
             st.success("A rendelés sikeresen elmentve a MySQL adatbázisba!")
             st.session_state["cart"] = []
+
 
