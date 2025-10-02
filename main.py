@@ -148,10 +148,10 @@ if menu == "🛒 Rendelés leadása":
 
         # Kosár véglegesítése MySQL-be
         if st.button("✅ Kosár véglegesítése"):
-        if not customer_name:
-        st.error("❌ A rendeléshez kötelező megadni a neved!")
+            if not customer_name:
+            st.error("❌ A rendeléshez kötelező megadni a neved!")
         else:
-        if save_order_to_mysql(st.session_state["cart"], customer_name=customer_name):
+            if save_order_to_mysql(st.session_state["cart"], customer_name=customer_name):
             st.success(f"A rendelés sikeresen elmentve a MySQL adatbázisba {customer_name} néven!")
             st.session_state["cart"] = []
 
@@ -177,5 +177,6 @@ elif menu == "📊 Admin – Rendelések listája":
         st.download_button("⬇️ Letöltés Excel (összes rendelés)", output.getvalue(), "orders.xlsx")
     else:
         st.info("Még nincsenek rendelések az adatbázisban.")
+
 
 
