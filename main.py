@@ -1,6 +1,41 @@
 import streamlit as st
 import pandas as pd
 from io import BytesIO
+import mysql.connector
+
+# ---------- MYSQL KAPCSOLAT ----------
+def save_order_to_mysql(cart, customer_name="Ismeretlen"):
+    try:
+        conn = mysql.connector.connect(
+            host="sql7.freesqldatabase.com",
+            user="sql7801045",
+            password="bCz35PVN7v",
+            database="sql7801045"
+        )
+        cursor = conn.cursor()
+
+        for item in cart:
+            sql = """
+                INSERT INTO orders (customer, product_code, product_name, quantity, price, subtotal)
+                VALUES (%s, %s, %s, %s, %s, %s)
+            """
+            values = (
+                customer_name,
+                item.get("termékkód", ""),
+                item.get("név", ""),
+                int(item.get("rendelt_mennyiség", 0)),
+                float(item.get("ár", 0)),
+                float(item.get("részösszeg", 0))
+            )
+            cursor.execute(sql, values)
+
+        conn.commit()
+        cursor.close()
+        conn.close()
+        return True
+    except Exception as e:
+        st.error(f"MySQL hiba: {e}")
+        return False
 
 # ---------- ADATOK BETÖLTÉSE ----------
 @st.cache_data
@@ -92,3 +127,9 @@ if st.session_state["cart"]:
     with pd.ExcelWriter(output, engine="openpyxl") as writer:
         cart_df.to_excel(writer, index=False, sheet_name="Rendeles")
     st.download_button("⬇️ Letöltés Excel (XLSX)", output.getvalue(), "rendeles.xlsx")
+
+    # Kosár véglegesítése MySQL-be
+    if st.button("✅ Kosár véglegesítése"):
+        if save_order_to_mysql(st.session_state["cart"], customer_name="Teszt Felhasználó"):
+            st.success("A rendelés sikeresen elmentve a MySQL adatbázisba!")
+            st.session_state["cart"] = []
