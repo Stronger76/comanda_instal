@@ -8,7 +8,7 @@ def get_connection():
     return mysql.connector.connect(
         host="sql7.freesqldatabase.com",   # <-- saját host
         user="sql7801054",                 # <-- saját user
-        password="x3cxPm8WeK",         # <-- saját jelszó
+        password="x3cxPm8WeK",             # <-- saját jelszó
         database="sql7801054",             # <-- saját adatbázis
         port=3306
     )
@@ -48,6 +48,33 @@ def load_orders():
     except Exception as e:
         st.error(f"MySQL hiba (orders lekérés): {e}")
         return pd.DataFrame()
+
+def delete_orders_by_customer(customer_name):
+    try:
+        conn = get_connection()
+        cursor = conn.cursor()
+        sql = "DELETE FROM orders WHERE customer = %s"
+        cursor.execute(sql, (customer_name,))
+        conn.commit()
+        cursor.close()
+        conn.close()
+        return True
+    except Exception as e:
+        st.error(f"MySQL törlés hiba: {e}")
+        return False
+
+def delete_all_orders():
+    try:
+        conn = get_connection()
+        cursor = conn.cursor()
+        cursor.execute("DELETE FROM orders")
+        conn.commit()
+        cursor.close()
+        conn.close()
+        return True
+    except Exception as e:
+        st.error(f"MySQL törlés hiba: {e}")
+        return False
 
 # ---------- ADATOK BETÖLTÉSE GOOGLE SHEETBŐL ----------
 @st.cache_data
@@ -155,28 +182,42 @@ if menu == "🛒 Rendelés leadása":
 
 # ---------- ADMIN FELÜLET ----------
 elif menu == "📊 Admin – Rendelések listája":
-    st.title("📊 Rendelések – Admin felület")
+    st.title("🔑 Admin belépés")
+    admin_password = st.text_input("Admin jelszó:", type="password")
 
-    orders_df = load_orders()
+    if admin_password == "19760111":  # <-- cseréld ki saját jelszóra
+        st.success("Sikeres admin belépés ✅")
+        st.title("📊 Rendelések – Admin felület")
 
-    if not orders_df.empty:
-        # Vásárló szerinti szűrés
-        customers = orders_df["customer"].dropna().unique().tolist()
-        selected_customer = st.selectbox("Szűrés vásárlóra:", ["(Mind)"] + customers)
+        orders_df = load_orders()
 
-        if selected_customer != "(Mind)":
-            orders_df = orders_df[orders_df["customer"] == selected_customer]
+        if not orders_df.empty:
+            # Vásárló szerinti szűrés
+            customers = orders_df["customer"].dropna().unique().tolist()
+            selected_customer = st.selectbox("Szűrés vásárlóra:", ["(Mind)"] + customers)
 
-        st.write(f"Összesen {len(orders_df)} rendelés található a szűrés után.")
-        st.dataframe(orders_df, use_container_width=True)
+            if selected_customer != "(Mind)":
+                orders_df = orders_df[orders_df["customer"] == selected_customer]
 
-        # Export lehetőségek
-        csv = orders_df.to_csv(index=False).encode("utf-8")
-        st.download_button("⬇️ Letöltés CSV (összes rendelés)", csv, "orders.csv", "text/csv")
+            st.write(f"Összesen {len(orders_df)} rendelés található a szűrés után.")
+            st.dataframe(orders_df, use_container_width=True)
 
-        output = BytesIO()
-        with pd.ExcelWriter(output, engine="openpyxl") as writer:
-            orders_df.to_excel(writer, index=False, sheet_name="Orders")
-        st.download_button("⬇️ Letöltés Excel (összes rendelés)", output.getvalue(), "orders.xlsx")
-    else:
-        st.info("Még nincsenek rendelések az adatbázisban.")
+            # Vásárló rendeléseinek törlése megerősítéssel
+            if selected_customer != "(Mind)":
+                if st.button(f"🗑️ {selected_customer} rendeléseinek törlése"):
+                    st.warning(f"Biztosan törölni akarod {selected_customer} összes rendelését?")
+                    if st.button("✅ Igen, töröld"):
+                        if delete_orders_by_customer(selected_customer):
+                            st.success(f"{selected_customer} összes rendelése törölve lett!")
+
+            # Összes rendelés törlése megerősítéssel
+            if st.button("🗑️ Összes rendelés törlése"):
+                st.warning("⚠️ Biztosan törölni akarod az ÖSSZES rendelést?")
+                if st.button("✅ Igen, mindent törölj"):
+                    if delete_all_orders():
+                        st.success("Minden rendelés törölve lett az adatbázisból!")
+
+        else:
+            st.info("Még nincsenek rendelések az adatbázisban.")
+    elif admin_password:
+        st.error("❌ Hibás admin jelszó!")
