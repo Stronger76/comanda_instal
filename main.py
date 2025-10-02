@@ -26,7 +26,7 @@ authenticator = stauth.Authenticate(
 )
 
 # Login panel (új szintaxis)
-name, authentication_status, username = authenticator.login(location="main")
+name, authentication_status = authenticator.login(location="main")
 
 # ---------- LOGIN KEZELÉS ----------
 if authentication_status == False:
@@ -130,3 +130,4 @@ elif authentication_status:
         with pd.ExcelWriter(output, engine="openpyxl") as writer:
             cart_df.to_excel(writer, index=False, sheet_name="Rendeles")
         st.download_button("⬇️ Letöltés Excel (XLSX)", output.getvalue(), "rendeles.xlsx")
+
